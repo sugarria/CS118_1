@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
          if (pid == 0)  { // fork() returns a value of 0 to the child process
              close(sockfd);
 
-             debug();
+             //debug(); UNCOMMENT TO DEBUG
             
              dostuff(newsockfd);  //makes the connection wait for a input from client
 
@@ -141,7 +141,14 @@ char* fileType (char *input)
 //Returns a timestamp of the response message
 char* currentTime()
 {
-  return 0;
+  //get the time since epoch
+  time_t rawCurrTime = time(0);
+
+  time(&rawCurrTime);
+
+  char* currTime = ctime(&rawCurrTime);
+
+  return currTime;
 }
 
 //Returns the last modified date of the file we're looking at
@@ -238,7 +245,11 @@ void debug()
 
   //TEST LAST MODIFIED
   char* lastMod = lastModified("lick.html");
-  printf("Last modified date: %s \n", lastMod);
+  printf("Last modified date: %s \n\n", lastMod);
+
+  //TEST CURRENT TIME
+  char* currTime = currentTime();
+  printf("Current time: %s \n", currTime);
 
 }
 
