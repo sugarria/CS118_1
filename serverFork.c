@@ -22,6 +22,9 @@ void sigchld_handler(int s)
 
 void dostuff(int); /* function prototype */
 char* fileType(char*);
+char* currentTime();
+char* lastModified(char*);
+char* contentLength(char*);
 
 void error(char *msg)
 {
@@ -122,4 +125,27 @@ char* fileType (char *input)
   else
     return ret;
 }
+
+//Returns a timestamp of the response message
+char* currentTime()
+{
+  return 0;
+}
+
+//Returns the last modified date of the file we're looking at
+char* lastModified (char* input)
+{
+  return 0;
+}
+
+//Returns the content length of the file we're looking at
+char* contentLength (char* input)
+{
+  //Does it return bits or bytes? D: probably just sizeof?
+  return 0;
+}
+
+
+
+
 
