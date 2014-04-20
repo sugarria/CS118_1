@@ -25,6 +25,7 @@ char* fileType(char*);
 char* currentTime();
 char* lastModified(char*);
 char* contentLength(char*);
+char* parseMessage(char*);
 
 void error(char *msg)
 {
@@ -107,10 +108,18 @@ void dostuff (int sock)
 {
    int n;
    char buffer[256];      
+   //declaring our variables
+   char* filePath;
+
    bzero(buffer,256);
    n = read(sock,buffer,255);
    if (n < 0) error("ERROR reading from socket");
    printf("Here is the message: %s\n",buffer);
+
+   //testing parseMessage()
+   filePath = parseMessage(buffer);
+   printf("Here is the URL parsed from the request: %s\n", filePath);
+
    n = write(sock,"I got your message",18);
    if (n < 0) error("ERROR writing to socket");
 }
@@ -146,6 +155,29 @@ char* contentLength (char* input)
 }
 
 
-
-
+// this function will parse the file we want out of the
+// get request and return a c-string of the url.
+  // ex: GET /derp.html HTTP/1.1 ...
+  // returns /derp.html
+char* parseMessage(char* buffer) {
+  // buffer = "DERP /derp.html DERP/1.1\0";
+  int end, start = 0, size = 0, spCount = 0;
+  for (end = 0; end < 256; end++) {
+    if (buffer[end] == ' ') {
+      if (spCount == 0) {
+        start = end;
+        spCount++;
+      } else if (spCount == 1) {
+        size = end - start;
+        spCount++;
+        break;
+      }
+    }
+  }
+  char* output;
+  output = malloc(sizeof(char) * size);
+  memcpy(output, buffer+start+1, size);
+  output[size] = '\0';
+  return output;
+}
 
