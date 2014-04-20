@@ -14,6 +14,8 @@
 
 //Additional includes
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
 
 void sigchld_handler(int s)
 {
@@ -24,8 +26,9 @@ void dostuff(int); /* function prototype */
 char* fileType(char*);
 char* currentTime();
 char* lastModified(char*);
-char* contentLength(char*);
+int contentLength(char*);
 char* parseMessage(char*);
+void debug();
 
 void error(char *msg)
 {
@@ -85,8 +88,8 @@ int main(int argc, char *argv[])
          if (pid == 0)  { // fork() returns a value of 0 to the child process
              close(sockfd);
 
-             char *meow = fileType("hi.dogs-cats.meow.html");
-
+             debug();
+            
              dostuff(newsockfd);  //makes the connection wait for a input from client
 
              exit(0);
@@ -142,16 +145,48 @@ char* currentTime()
 }
 
 //Returns the last modified date of the file we're looking at
-char* lastModified (char* input)
+char* lastModified (char* path)
 {
-  return 0;
+  struct stat fileState;
+
+  int retVal = stat(path, &fileState);
+
+  if (retVal != 0)
+  {
+    printf("Error determining last modified. Errno %d \n", retVal);
+    return 0;
+  }
+
+  //Access the last modified timestamp
+  time_t rawModTime = fileState.st_mtime;
+  time(&rawModTime);
+
+  char* lastModTime = ctime(&rawModTime);
+
+  return lastModTime;
 }
 
 //Returns the content length of the file we're looking at
-char* contentLength (char* input)
+int contentLength (char* path)
 {
-  //Does it return bits or bytes? D: probably just sizeof?
-  return 0;
+  //Passes in the path to function stat and gets the size
+  //Ex. a file named "dog.html" in our directory will have a char* path of "dog.html"
+
+  //Initialize the struct and run stat
+  struct stat fileState;
+
+  int retVal = stat(path, &fileState);
+
+  if (retVal != 0)
+  {
+    printf("Error determining file state. Errno %d \n", retVal);;
+    return 0;
+  }
+
+  //Access the size value
+  int size = (int)(fileState.st_size);
+
+  return size;
 }
 
 
@@ -179,5 +214,31 @@ char* parseMessage(char* buffer) {
   memcpy(output, buffer+start+1, size);
   output[size] = '\0';
   return output;
+}
+
+
+//For my sanity...
+void debug()
+{
+  //TEST EXTENSION
+  char* testString = "dog.dog.dog.cat-meow.doc";
+  char* type = fileType(testString);
+  printf("The extension should be .doc: %s \n\n", type);
+
+  testString = "hihihihi!!!hiH!!!!fdm";
+  type = fileType(testString);
+  printf("The extension should be nothing: %s \n\n", type);
+
+  //TEST LENGTH
+  int lenTest = contentLength("lick.html");
+  printf("The size of lick.html should be about 162kb: %d \n\n", lenTest);
+
+  lenTest = contentLength("lots_of_boobs.html");
+  printf("There should be an error above because the file doesn't exist: %d \n\n", lenTest);
+
+  //TEST LAST MODIFIED
+  char* lastMod = lastModified("lick.html");
+  printf("Last modified date: %s \n", lastMod);
+
 }
 
