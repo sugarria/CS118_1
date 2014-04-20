@@ -12,6 +12,8 @@
 #include <sys/wait.h>	/* for the waitpid() system call */
 #include <signal.h>	/* signal name macros, and the kill() prototype */
 
+//Additional includes
+#include <string.h>
 
 void sigchld_handler(int s)
 {
@@ -19,6 +21,8 @@ void sigchld_handler(int s)
 }
 
 void dostuff(int); /* function prototype */
+char* fileType(char*);
+
 void error(char *msg)
 {
     perror(msg);
@@ -76,8 +80,11 @@ int main(int argc, char *argv[])
          
          if (pid == 0)  { // fork() returns a value of 0 to the child process
              close(sockfd);
+
+             char *meow = fileType("hi.dogs-cats.meow.html");
+
              dostuff(newsockfd);  //makes the connection wait for a input from client
-             //printf("Hello");   
+
              exit(0);
          }
          else //returns the process ID of the child process to the parent
@@ -96,8 +103,7 @@ int main(int argc, char *argv[])
 void dostuff (int sock)
 {
    int n;
-   char buffer[256];
-      
+   char buffer[256];      
    bzero(buffer,256);
    n = read(sock,buffer,255);
    if (n < 0) error("ERROR reading from socket");
@@ -105,3 +111,15 @@ void dostuff (int sock)
    n = write(sock,"I got your message",18);
    if (n < 0) error("ERROR writing to socket");
 }
+
+//Returns the file extension of the file (ex. hi.dogs-cats.html should return .html)
+/* Declare a char* variable and set it as the output of the function */
+char* fileType (char *input)
+{
+  char *ret = strrchr(input, '.');
+  if (!ret || ret == input)
+    return "";
+  else
+    return ret;
+}
+
