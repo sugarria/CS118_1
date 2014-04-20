@@ -22,7 +22,7 @@ void sigchld_handler(int s)
 
 void dostuff(int); /* function prototype */
 char* fileType(char*);
-char* parseMessage(char*)
+char* parseMessage(char*);
 
 void error(char *msg)
 {
