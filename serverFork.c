@@ -16,19 +16,12 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
+#include "serverFork.h"
 
 void sigchld_handler(int s)
 {
     while(waitpid(-1, NULL, WNOHANG) > 0);
 }
-
-void dostuff(int); /* function prototype */
-char* fileType(char*);
-char* currentTime();
-char* lastModified(char*);
-int contentLength(char*);
-char* parseMessage(char*);
-void debug();
 
 void error(char *msg)
 {
@@ -110,9 +103,10 @@ int main(int argc, char *argv[])
 void dostuff (int sock)
 {
    int n;
-   char buffer[256];      
+   char buffer[256], responseHeader[256];      
    //declaring our variables
    char* filePath;
+   HeaderData *header;
 
    bzero(buffer,256);
    n = read(sock,buffer,255);
@@ -122,9 +116,29 @@ void dostuff (int sock)
    //testing parseMessage()
    filePath = parseMessage(buffer);
    printf("Here is the URL parsed from the request: %s\n", filePath);
+   header = initializeHeaderData(filePath);
+   /*sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %s\nServer: %lu\nLast-Modified: %s\nContent-Length: %i\nContent-Type: text/html\0",
+    header->currentTime, header->server, header->lastModified, header->length);
+   printf("%s\n", responseHeader);*/
 
    n = write(sock,"I got your message",18);
    if (n < 0) error("ERROR writing to socket");
+}
+
+HeaderData* initializeHeaderData(char* filePath) {
+  HeaderData *hd;
+  char* response;
+
+  hd = malloc(sizeof(struct HeaderData));
+  hd->URL = filePath;
+  hd->lastModified = lastModified(filePath+1);
+  hd->currentTime = currentTime(filePath+1);
+  hd->server = INADDR_ANY;
+  hd->currentTime = currentTime();
+  hd->length = contentLength(filePath+1);
+  hd->type = fileType(filePath+1);
+
+  return hd;
 }
 
 //Returns the file extension of the file (ex. hi.dogs-cats.html should return .html)
@@ -210,7 +224,7 @@ char* parseMessage(char* buffer) {
         start = end;
         spCount++;
       } else if (spCount == 1) {
-        size = end - start;
+        size = end - start - 1;
         spCount++;
         break;
       }
