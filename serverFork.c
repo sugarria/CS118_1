@@ -81,8 +81,8 @@ int main(int argc, char *argv[])
          if (pid == 0)  { // fork() returns a value of 0 to the child process
              close(sockfd);
 
-             printf("shut up");
-             debug(); //UNCOMMENT TO DEBUG
+             //printf("shut up");
+             //debug(); //UNCOMMENT TO DEBUG
             
              dostuff(newsockfd);  //makes the connection wait for a input from client
 
@@ -173,7 +173,7 @@ char* lastModified (char* path)
 
   int retVal = stat(path, &fileState);
 
-  char buf [80];
+  //char buf [80];
 
   if (retVal != 0)
   {
@@ -181,22 +181,15 @@ char* lastModified (char* path)
     return 0;
   }
 
-
   //strftime(buf, 80, "%d-%y-%m", localtime(&(fileState.st_ctime)))
 
   //Access the last modified timestamp
   time_t rawModTime = fileState.st_ctime;
   //time(&rawModTime);
 
-
-
   char* lastModTime = ctime(&rawModTime);
 
   return lastModTime;
-
-
-
-
 }
 
 //Returns the content length of the file we're looking at
