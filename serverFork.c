@@ -17,6 +17,8 @@
 #include <sys/stat.h>
 #include <time.h>
 #include "serverFork.h"
+#include <arpa/inet.h>
+
 
 void sigchld_handler(int s)
 {
@@ -45,6 +47,7 @@ int main(int argc, char *argv[])
         error("ERROR opening socket");
       
      bzero((char *) &serv_addr, sizeof(serv_addr));
+
      portno = atoi(argv[1]);
      serv_addr.sin_family = AF_INET;
      serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -53,7 +56,7 @@ int main(int argc, char *argv[])
      if (bind(sockfd, (struct sockaddr *) &serv_addr,
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
-     
+
      listen(sockfd,5);
      
      clilen = sizeof(cli_addr);
@@ -82,7 +85,7 @@ int main(int argc, char *argv[])
              close(sockfd);
 
              //printf("shut up");
-             //debug(); //UNCOMMENT TO DEBUG
+             debug(); //UNCOMMENT TO DEBUG
             
              dostuff(newsockfd);  //makes the connection wait for a input from client
 
@@ -125,7 +128,9 @@ void dostuff (int sock)
    sprintf(response, "%s\n\n%s\0", responseHeader, header->content);
    printf("Here is what the response message is: %s\n", response);
 
-   n = write(sock, response, 256);
+   size_t totalSize = (size_t)(contentLength(filePath) + (int)strlen(responseHeader));
+
+   n = write(sock, response, (int)totalSize);
    if (n < 0) error("ERROR writing to socket");
 }
 
@@ -177,6 +182,12 @@ char* currentTime()
 //Returns the last modified date of the file we're looking at
 char* lastModified (char* path)
 {
+ //Function breaks if there is a leading /, so we accomodate for it
+  if (path[0] == '/')
+  {
+    path++;
+  }
+
   struct stat fileState;
 
   int retVal = stat(path, &fileState);
@@ -200,9 +211,37 @@ char* lastModified (char* path)
   return lastModTime;
 }
 
+char* serverIP ()
+{
+  /*
+  int s;
+  struct sockaddr_in sa;
+  int sa_len;
+
+  sa_len = sizeof(sa);
+  printf("Socket address is %s\n", inet_ntoa(sa.sin_addr));
+  printf("port at %d\n", (int) ntohs(sa.sin_port));
+
+  //struct ifaddrs *id;
+  int val;
+  //val = getifaddrs(&id);
+*/
+
+  //printf("address is %s at %d\n", id->ifa_name, id->ifa_addr);
+  //printf("address is %s\n\n\n\n\n", id->ifa_addr);
+
+  return 0;
+
+}
+
 //Returns the content length of the file we're looking at
 int contentLength (char* path)
 {
+  //Function breaks if there is a leading /, so we accomodate for it
+  if (path[0] == '/')
+  {
+    path++;
+  }
   //Passes in the path to function stat and gets the size
   //Ex. a file named "dog.html" in our directory will have a char* path of "dog.html"
 
@@ -277,6 +316,10 @@ void debug()
   //TEST CURRENT TIME
   char* currTime = currentTime();
   printf("Current time: %s \n", currTime);
+
+  //PRINT OUT CURRENT IP ADDRESS
+ // printf("ServerIP:\n");
+  //serverIP();
 
 }
 

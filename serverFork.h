@@ -2,8 +2,10 @@ void dostuff(int); /* function prototype */
 char* fileType(char*);
 char* currentTime();
 char* lastModified(char*);
+char* serverIP();
 int contentLength(char*);
 char* parseMessage(char*);
+
 void debug();
 
 typedef struct HeaderData {
