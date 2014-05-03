@@ -118,17 +118,21 @@ void dostuff (int sock)
    filePath = parseMessage(buffer);
    printf("Here is the URL parsed from the request: %s\n", filePath);
    header = initializeHeaderData(filePath);
-   /*sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %s\nServer: %lu\nLast-Modified: %s\nContent-Length: %i\nContent-Type: text/html\0",
-    header->currentTime, header->server, header->lastModified, header->length);
-   printf("%s\n", responseHeader);*/
+   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %sServer: http://localhost:8080\nLast-Modified: %sContent-Length: %i\nContent-Type: text/html\0",
+    header->currentTime, header->lastModified, header->length, header->content);
+   char* response;
+   response = malloc(256 + header->length);
+   sprintf(response, "%s\n\n%s\0", responseHeader, header->content);
+   printf("Here is what the response message is: %s\n", response);
 
-   n = write(sock,"I got your message",18);
+   n = write(sock, response, 256);
    if (n < 0) error("ERROR writing to socket");
 }
 
 HeaderData* initializeHeaderData(char* filePath) {
   HeaderData *hd;
   char* response;
+  FILE* fp;
 
   hd = malloc(sizeof(struct HeaderData));
   hd->URL = filePath;
@@ -138,6 +142,10 @@ HeaderData* initializeHeaderData(char* filePath) {
   hd->currentTime = currentTime();
   hd->length = contentLength(filePath+1);
   hd->type = fileType(filePath+1);
+  hd->content = malloc(hd->length+1);
+  fp = fopen(filePath+1, "rb");
+  fread(hd->content, 1, hd->length, fp);
+  hd->content[hd->length] = '\0';
 
   return hd;
 }

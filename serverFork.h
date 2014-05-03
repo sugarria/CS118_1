@@ -13,6 +13,7 @@ typedef struct HeaderData {
 	char* lastModified;
 	int length;
 	char* type;
+	char* content;
 }HeaderData, HeaderData_p;
 
 HeaderData* initializeHeaderData(char*);
