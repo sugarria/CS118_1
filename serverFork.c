@@ -121,14 +121,15 @@ void dostuff (int sock)
    filePath = parseMessage(buffer);
    printf("Here is the URL parsed from the request: %s\n", filePath);
    header = initializeHeaderData(filePath);
-   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %sServer: http://localhost:8080\nLast-Modified: %sContent-Length: %i\nContent-Type: text/html\0",
+   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %sLast-Modified: %sContent-Length: %i\nContent-Type: text/html\0",
     header->currentTime, header->lastModified, header->length, header->content);
    char* response;
    response = malloc(256 + header->length);
    sprintf(response, "%s\n\n%s\0", responseHeader, header->content);
    printf("Here is what the response message is: %s\n", response);
 
-   size_t totalSize = (size_t)(contentLength(filePath) + (int)strlen(responseHeader));
+   // size_t totalSize = (size_t)(contentLength(filePath) + (int)strlen(responseHeader) + 2);
+   size_t totalSize = (int)strlen(response);
 
    n = write(sock, response, (int)totalSize);
    if (n < 0) error("ERROR writing to socket");
