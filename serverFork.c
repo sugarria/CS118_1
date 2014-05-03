@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
              close(sockfd);
 
              //printf("shut up");
-             debug(); //UNCOMMENT TO DEBUG
+             // debug(); //UNCOMMENT TO DEBUG
             
              dostuff(newsockfd);  //makes the connection wait for a input from client
 
@@ -115,24 +115,27 @@ void dostuff (int sock)
    bzero(buffer,256);
    n = read(sock,buffer,255);
    if (n < 0) error("ERROR reading from socket");
-   printf("Here is the message: %s\n",buffer);
+   // printf("Here is the message: %s\n",buffer);
 
    //testing parseMessage()
    filePath = parseMessage(buffer);
-   printf("Here is the URL parsed from the request: %s\n", filePath);
+   // printf("Here is the URL parsed from the request: %s\n", filePath);
    header = initializeHeaderData(filePath);
-   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %sLast-Modified: %sContent-Length: %i\nContent-Type: text/html\0",
-    header->currentTime, header->lastModified, header->length, header->content);
+   char* response = constructHeader(header);
+   printf("Here is what the response message is:\n%s\n", response);
+
+   n = write(sock, response, (int)strlen(response));
+   if (n < 0) error("ERROR writing to socket");
+}
+
+char* constructHeader(HeaderData* header) {
+   char responseHeader[256];
+   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %sLast-Modified: %sContent-Length: %i\nContent-Type: %s\0",
+   header->currentTime, header->lastModified, header->length, header->type);
    char* response;
    response = malloc(256 + header->length);
    sprintf(response, "%s\n\n%s\0", responseHeader, header->content);
-   printf("Here is what the response message is: %s\n", response);
-
-   // size_t totalSize = (size_t)(contentLength(filePath) + (int)strlen(responseHeader) + 2);
-   size_t totalSize = (int)strlen(response);
-
-   n = write(sock, response, (int)totalSize);
-   if (n < 0) error("ERROR writing to socket");
+   return response;
 }
 
 HeaderData* initializeHeaderData(char* filePath) {
@@ -164,7 +167,15 @@ char* fileType (char *input)
   if (!ret || ret == input)
     return "";
   else
-    return ret;
+    if (memcmp(ret+1, "html", 4) == 0)
+      return "text/html";
+    else if (memcmp(ret+1, "jpeg", 4) == 0)
+      return "image/jpeg";
+    else if (memcmp(ret+1, "jpg", 3) == 0)
+      return "image/jpg";
+    else if (memcmp(ret+1, "gif", 3) == 0)
+      return "image/gif";
+    return ret+1;
 }
 
 //Returns a timestamp of the response message

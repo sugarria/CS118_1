@@ -19,3 +19,4 @@ typedef struct HeaderData {
 }HeaderData, HeaderData_p;
 
 HeaderData* initializeHeaderData(char*);
+char* constructHeader(HeaderData*);
