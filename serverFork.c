@@ -121,10 +121,14 @@ void dostuff (int sock)
    filePath = parseMessage(buffer);
    // printf("Here is the URL parsed from the request: %s\n", filePath);
    header = initializeHeaderData(filePath);
-   char* response = constructHeader(header);
-   printf("Here is what the response message is:\n%s\n", response);
-
-   n = write(sock, response, (int)strlen(response));
+   if (header == NULL) {
+     n = write(sock, "HTTP/1.1 404 Not Found", 12);
+     printf("404'd that ish\n");
+   } else {
+     char* response = constructHeader(header);
+     printf("Here is what the response message is:\n%s\n", response);
+     n = write(sock, response, (int)strlen(response));
+   }
    if (n < 0) error("ERROR writing to socket");
 }
 
@@ -145,14 +149,20 @@ HeaderData* initializeHeaderData(char* filePath) {
 
   hd = malloc(sizeof(struct HeaderData));
   hd->URL = filePath;
+  fp = fopen(filePath+1, "rb");
+  if(fp == NULL) {
+    return NULL;
+  }
+  hd->type = fileType(filePath+1);
+  if (hd->type == NULL) {
+    return NULL;
+  }
   hd->lastModified = lastModified(filePath+1);
   hd->currentTime = currentTime(filePath+1);
   hd->server = INADDR_ANY;
   hd->currentTime = currentTime();
   hd->length = contentLength(filePath+1);
-  hd->type = fileType(filePath+1);
   hd->content = malloc(hd->length+1);
-  fp = fopen(filePath+1, "rb");
   fread(hd->content, 1, hd->length, fp);
   hd->content[hd->length] = '\0';
 
@@ -175,7 +185,7 @@ char* fileType (char *input)
       return "image/jpg";
     else if (memcmp(ret+1, "gif", 3) == 0)
       return "image/gif";
-    return ret+1;
+    return NULL;
 }
 
 //Returns a timestamp of the response message
