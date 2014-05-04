@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
              close(sockfd);
 
              //printf("shut up");
-             // debug(); //UNCOMMENT TO DEBUG
+             debug(); //UNCOMMENT TO DEBUG
             
              dostuff(newsockfd);  //makes the connection wait for a input from client
 
@@ -150,8 +150,11 @@ void sendFile(int sock, FILE* fp) {
 
 char* constructHeader(HeaderData* header) {
    char* responseHeader = malloc(256);
-   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %sLast-Modified: %sContent-Length: %i\nContent-Type: %s\n\n\0",
-   header->currentTime, header->lastModified, header->length, header->type);
+   int n;
+   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %s",
+   currentTime()); 
+   sprintf(responseHeader+(int)strlen(responseHeader), "Last-Modified: %sContent-Length: %i\nContent-Type: %s\n\n\0",
+   lastModified(header->URL+1), header->length, header->type);
    return responseHeader;
 }
 
@@ -169,9 +172,6 @@ HeaderData* initializeHeaderData(char* filePath) {
   if (hd->type == NULL) {
     return NULL;
   }
-  hd->lastModified = lastModified(filePath+1);
-  hd->currentTime = currentTime(filePath+1);
-  hd->currentTime = currentTime();
   hd->length = contentLength(filePath+1);
   fclose(fp);
   return hd;
@@ -204,9 +204,9 @@ char* currentTime()
 
   time(&rawCurrTime);
 
-  char* currTime = ctime(&rawCurrTime);
+  // char* currTime = ctime(&rawCurrTime);
 
-  return currTime;
+  return ctime(&rawCurrTime);
 }
 
 //Returns the last modified date of the file we're looking at
@@ -236,9 +236,9 @@ char* lastModified (char* path)
   time_t rawModTime = fileState.st_ctime;
   //time(&rawModTime);
 
-  char* lastModTime = ctime(&rawModTime);
+  // char* lastModTime = ctime(&rawModTime);
 
-  return lastModTime;
+  return ctime(&rawModTime);
 }
 
 char* serverIP ()
@@ -346,6 +346,7 @@ void debug()
   //TEST CURRENT TIME
   char* currTime = currentTime();
   printf("Current time: %s \n", currTime);
+  printf("Last modified date: %s \n\n", lastMod);
 
   //PRINT OUT CURRENT IP ADDRESS
  // printf("ServerIP:\n");
