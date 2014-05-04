@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
              close(sockfd);
 
              //printf("shut up");
-             debug(); //UNCOMMENT TO DEBUG
+             // debug(); //UNCOMMENT TO DEBUG
             
              dostuff(newsockfd);  //makes the connection wait for a input from client
 
