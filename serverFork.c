@@ -126,30 +126,42 @@ void dostuff (int sock)
      printf("404'd that ish\n");
    } else {
      char* response = constructHeader(header);
-     printf("Here is what the response message is:\n%s\n", response);
+     printf("Here is what the response header is:\n%s\n", response);
      n = write(sock, response, (int)strlen(response));
    }
    if (n < 0) error("ERROR writing to socket");
+   FILE* fp = fopen(filePath+1, "r");
+   sendFile(sock, fp);
+
+}
+
+void sendFile(int sock, FILE* fp) {
+   int n;
+   char buf[256];
+   long int dataLength;
+   while (dataLength = fread(buf, 1, 256, fp)) {
+    n = write(sock, buf, dataLength);
+    if (n < 0) error("ERROR writing to socket");
+   }
+   if (ferror(fp)) {
+    fprintf(stderr, "read error\n");
+   }
 }
 
 char* constructHeader(HeaderData* header) {
-   char responseHeader[256];
-   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %sLast-Modified: %sContent-Length: %i\nContent-Type: %s\0",
+   char* responseHeader = malloc(256);
+   sprintf(responseHeader, "HTTP/1.1 200 OK\nConnection: close\nDate: %sLast-Modified: %sContent-Length: %i\nContent-Type: %s\n\n\0",
    header->currentTime, header->lastModified, header->length, header->type);
-   char* response;
-   response = malloc(256 + header->length);
-   sprintf(response, "%s\n\n%s\0", responseHeader, header->content);
-   return response;
+   return responseHeader;
 }
 
 HeaderData* initializeHeaderData(char* filePath) {
   HeaderData *hd;
   char* response;
   FILE* fp;
-
   hd = malloc(sizeof(struct HeaderData));
   hd->URL = filePath;
-  fp = fopen(filePath+1, "rb");
+  fp = fopen(filePath+1, "r");
   if(fp == NULL) {
     return NULL;
   }
@@ -159,13 +171,9 @@ HeaderData* initializeHeaderData(char* filePath) {
   }
   hd->lastModified = lastModified(filePath+1);
   hd->currentTime = currentTime(filePath+1);
-  hd->server = INADDR_ANY;
   hd->currentTime = currentTime();
   hd->length = contentLength(filePath+1);
-  hd->content = malloc(hd->length+1);
-  fread(hd->content, 1, hd->length, fp);
-  hd->content[hd->length] = '\0';
-
+  fclose(fp);
   return hd;
 }
 
